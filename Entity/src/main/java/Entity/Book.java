@@ -9,7 +9,7 @@ public class Book {
     private String cover;
     private String details;
     private int cid;
-
+//
     private Categories categories;
 
 
