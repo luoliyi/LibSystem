@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--配置文件-->
+    <properties resource="dbconfig.properties"></properties>
+    <!--设置-->
+    <settings>
+        <!--设置是否允许缓存-->
+        <setting name="cacheEnabled" value="true"/>
+        <!--设置是否允许输出日志-->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+    <!--别名-->
+    <typeAliases>
+        <!--第一种定义别名的方式-->
+        <!--<typeAlias type="mybatis.Entity.Book" alias="Book"></typeAlias>-->
+        <!--指定包名下所有的类被自动扫描并定义默认别名，路径只给到包名就行
+mybatis会自动扫描包中的pojo类，自动定义别名，别名就是类名(首字母大写或小写都可以)-->
+        <package name="Entity"></package>
+    </typeAliases>
+    <!--类型处理器-->
+<!--    <typeHandlers>
+        <typeHandler handler="" javaType="" jdbcType=""></typeHandler>
+    </typeHandlers>-->
+    <!--开发环境-->
+    <environments default="development">
+        <!--开发环境一-->
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${mysql.driver}"/>
+                <property name="url" value="${mysql.url}"/>
+                <property name="username" value="${mysql.username}"/>
+                <property name="password" value="${mysql.password}"/>
+            </dataSource>
+        </environment>
+
+        <!--开发环境二-->
+        <environment id="work">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${mysql.driver}"/>
+                <property name="url" value="${mysql.url}"/>
+                <property name="username" value="${mysql.username}"/>
+                <property name="password" value="${mysql.password}"/>
+            </dataSource>
+        </environment>
+
+    </environments>
+    <mappers>
+        <!--映射-->
+        <mapper resource="mapper/BookMapper.xml"></mapper>
+    </mappers>
+</configuration>

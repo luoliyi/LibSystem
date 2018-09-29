@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--这里的namespace 是映射到接口,里面的方法要和下面的方法id一样。-->
+<mapper namespace="DAL.IBooksMapper">
+    <!--这里做增删改查-->
+    <select id="selectBookByIsbn" resultMap="selectTwoMap">
+       select * from Books as b inner join Categories as c on b.cid=c.cid where b.isbn=#{isbn}
+    </select>
+
+    <!--查询全部-->
+    <select id="selectAllBooks" resultType="Book">
+        select * from Books as b order by b.isbn asc;
+    </select>
+
+    <insert id="insertBook" parameterType="Book" useGeneratedKeys="true" keyProperty="isbn">
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="isbn">
+            SELECT LAST_INSERT_ID() AS isbn;
+        </selectKey>
+        insert into Books(title,author,price,publishDate,cover,details,cid)
+        values(#{title},#{author},#{price},#{publishDate},#{cover},#{details},#{cid})
+    </insert>
+
+    <!--修改-->
+    <update id="updateBook" parameterType="Book" keyProperty="uid" useGeneratedKeys="true">
+        update Books set title=#{title},author=#{author},price=#{price},publishDate=#{publishDate},
+        cover=#{cover} ,details=#{details},cid=#{cid} where isbn=#{isbn}
+    </update>
+
+    <!--删除-->
+    <delete id="deleteBook" parameterType="java.lang.Integer">
+        delete from Books where isbn=#{isbn}
+    </delete>
+
+    <!--批量删除-->
+    <delete id="deleteAllByIsbn" parameterType="java.util.List">
+        delete from Books
+        <where>
+            <if test="list!=null and list.size() gt 0">
+                isbn in
+                <foreach collection="list" open="(" separator="," close=")" item="item">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+
+    <!--获得总数-->
+    <select id="selectCount" resultType="java.lang.Integer">
+        select count(*) from Books
+    </select>
+
+    <!--分页-->
+    <select id="selectAllBooksByPage" resultMap="selectTwoMap">
+         select * from Books as b inner join Categories as c on b.cid=c.cid order by b.isbn asc limit #{pagelimit},#{size}
+    </select>
+
+    <!--3条件模糊查询-->
+    <select id="selectMohuByThreeLimit" resultMap="selectTwoMap">
+        select * from Books as b inner join Categories as c  on b.cid=c.cid
+        <where>
+            <if test="title!=null and title!=''">
+                b.title like '%${title}%'
+            </if>
+            <if test="author!=null and author!=''">
+                and b.author like '%${author}%'
+            </if>
+            <if test="cname!=null and cname!=''">
+                and c.cname=#{cname}
+            </if>
+            <if test="beginprice!=null and beginprice &gt;0">
+              and b.price between #{beginprice}
+            </if>
+            <if test="endprice!=null and endprice &gt;0">
+                and #{endprice}
+            </if>
+        </where>
+        order by b.isbn
+    </select>
+
+    <!--两表查询,没条件-->
+    <select id="selectTwo" resultMap="selectTwoMap" parameterType="java.lang.String">
+        select * from Books as b inner join Categories as c on b.cid=c.cid order by b.isbn
+    </select>
+    <select id="selectTwoWithLimit" resultMap="selectTwoMap" parameterType="java.lang.String">
+        select * from Books as b inner join Categories as c on b.cid=c.cid
+        <if test="cid!=null and cid!=''">
+            and c.cid=#{cid};
+        </if>
+        order by b.isbn
+    </select>
+    <resultMap id="selectTwoMap" type="Book">
+        <id column="isbn" property="isbn" />
+        <result column="title" property="title" />
+        <result column="author" property="author" />
+        <result column="price" property="price" />
+        <result column="publishDate" property="publishDate" />
+        <result column="cover" property="cover"></result>
+        <result column="details" property="details"></result>
+        <result column="cid" property="cid"></result>
+        <!--连接-->
+        <association property="categories" javaType="Categories">
+            <id  column="cid" property="cid"></id>
+            <result column="cname" property="cname"></result>
+        </association>
+    </resultMap>
+</mapper>

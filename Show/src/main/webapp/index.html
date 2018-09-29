@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>书籍信息</title>
+    <link rel="stylesheet" href="js/layui/css/layui.css" media="all">
+    <style>
+        html,body{
+            width: 100%;
+            height: 100%;
+        }
+        #table{
+            border-collapse: collapse;
+            width: 90%;
+            text-align: center;
+            box-shadow: 6px 10px 15px lightgray;
+        }
+        #table th,table td{
+            padding: 7px;
+        }
+        #table a:hover{
+            cursor: pointer;
+            color: red;
+        }
+        #table2 input[type='button']{
+            padding:5px 10px;
+        }
+    </style>
+
+</head>
+<body>
+<marquee>
+    <h1 style="color:red;">欢迎您的到来</h1>
+</marquee>
+<div id="demo2-1"></div>
+<h2>模糊查询</h2>
+<label for="limitone">书名</label><input id="limitone" type="text">
+<label for="limittwo">作者</label><input id="limittwo" type="text">
+<label for="limitthree">类型</label><input id="limitthree" type="text">
+<label for="limitfour">起始价格</label><input id="limitfour" type="number">~~~
+<label for="limitfive">结束价格</label><input id="limitfive" type="number">
+
+<input type="button" value="模糊查询" id="mohubtn"><br/><br/>
+<table id="table" border="1">
+    <thead id="thead">
+    <tr>
+        <th>选择</th> <th>书籍编号</th><th>书籍名称</th><th>书籍作者</th><th>书籍价格</th><th>上架日期</th><th>封面</th>
+        <th>详细信息</th><th>类型</th><th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+<br/>
+
+<form id="form1" action="" method="post">
+    <fieldset id="fieldset" style="display: block;"><legend>详细信息</legend>
+        <table id="table2">
+            <tr>
+                <td><label for="isbn">书籍编号</label></td><td><input style="background: lightgray" id="isbn" name="isbn" type="text" readonly></td>
+            </tr>
+            <tr>
+                <td><label for="title">书籍名称</label></td><td><input id="title" name="title" type="text" ></td>
+            </tr>
+            <tr>
+                <td><label for="author">书籍作者</label></td><td><input id="author" name="author" type="text" ></td>
+            </tr>
+            <tr>
+                <td><label for="price">书籍价格</label></td><td><input id="price" name="price" type="number" ></td>
+            </tr>
+            <tr>
+                <td><label for="publishDate">上架日期</label></td><td><input id="publishDate" name="publishDate" type="date" ></td>
+            </tr>
+            <tr>
+                <td><label for="cover">封面</label></td><td><input id="cover" name="cover" type="file" ></td>
+            </tr>
+            <tr>
+                <td><label for="categoriescname">类型</label></td><td>
+                <select id="categoriescname" name="categoriescname">
+                    <option value="1">动漫</option>
+                    <option value="2">科幻</option>
+                    <option value="3">小说</option>
+                    <option value="4">武侠</option>
+                </select>
+            </tr>
+            <tr>
+              <!--  <td><label>详细信息</label>-->
+            </tr>
+            <tr>
+                <div id="editor"></div>
+            </tr>
+            <tr>
+                <td>操作</td>
+                <td><input id="btnadd" type="button" value="添加"><input id="btnupdate" type="button" value="修改">
+                    <input id="btndelall" type="button" value="批量删除"></td>
+            </tr>
+        </table>
+    </fieldset>
+</form>
+
+</body>
+<script src="js/jquery-1.11.3.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/wangEditor.min.js"></script>
+<script>
+    var E = window.wangEditor;
+    var editor = new E('#editor');
+    // 或者 var editor = new E( document.getElementById('editor') )
+    editor.create();
+</script>
+<script>
+    $(function () {
+        //封装概念。
+        //面向对象的概念
+        //一个对象-->app对象
+        var app={
+            count:0,
+            //分页，初始化数据
+            bindata:function () {
+                $.get("doServlet?action=getCount",{},function (sum) {
+                    console.log(app.count);
+                    //分页
+                    layui.use(['laypage', 'layer'], function() {
+                        var laypage = layui.laypage
+                            , layer = layui.layer;
+
+                        //总页数大于页码总数
+                        laypage.render({
+                            elem: 'demo2-1'
+                            ,limit:4
+                            , count: sum //数据总数
+
+                            //当前页
+                            ,curr: location.hash.replace('#!fenye=', '') //获取起始页
+                            ,hash: 'fenye' //自定义hash值
+
+                            , jump: function (obj) {
+                                //请求数据
+                                $.ajax({
+                                    url:"doServlet?action=getAllBooksByPage",
+                                    data:{pageno:obj.curr,size:obj.limit},
+                                    success:function (jsdata) {
+                                        //加载到表格
+                                        $("#tbody tr").remove();
+                                        $.each(jsdata.data,function (index,obj) {
+                                            var tr=$("<tr/>");
+                                            var rad=$("<input type='checkbox' class='check'> ").data("isbn",obj.isbn);
+                                            $("<td/>").append(rad).appendTo(tr);
+                                            $("<td/>").html(obj.isbn).appendTo(tr);
+                                            $("<td/>").html(obj.title).appendTo(tr);
+                                            $("<td/>").html(obj.author).appendTo(tr);
+                                            $("<td/>").html(obj.price).appendTo(tr);
+                                            $("<td/>").html(obj.publishDate).appendTo(tr);
+                                            $("<td/>").html(obj.cover).appendTo(tr);
+                                            $("<td/>").html(obj.details).appendTo(tr);
+                                            $("<td/>").html(jsdata.data[index].categories.cname).appendTo(tr);
+                                            //修改
+                                            var aEdit=$("<a class='aEdit'>修改</a>").data("obj",obj).data("cid",jsdata.data[index].categories.cid);
+                                            var aDel=$("<a class='aDel'>删除</a>").data("isbn",obj.isbn);
+
+                                            $("<td/>").append(aEdit).append("  |  ").append(aDel).appendTo(tr);
+
+                                            $("#tbody").append(tr);
+                                        })
+                                    }
+                                })
+                            }
+                        });
+                    })
+                })
+            },
+            
+            /*模糊查询*/
+            mohuSelect:function(){
+                $("#tbody tr").remove();
+                $.ajax({
+                    url:"doServlet?action=mohuSelect",
+                    data:{title:$("#limitone").val(),author:$("#limittwo").val(),cname:$("#limitthree").val(),
+                        price1:$("#limitfour").val(),price2:$("#limitfive").val()},
+
+                        success:function (jsdata) {
+                            //加载到表格
+                            $("#tbody tr").remove();
+                            $.each(jsdata.data,function (index,obj) {
+                                var tr=$("<tr/>");
+                                var rad=$("<input type='checkbox' class='check'> ").data("isbn",obj.isbn);
+                                $("<td/>").append(rad).appendTo(tr);
+                                $("<td/>").html(obj.isbn).appendTo(tr);
+                                $("<td/>").html(obj.title).appendTo(tr);
+                                $("<td/>").html(obj.author).appendTo(tr);
+                                $("<td/>").html(obj.price).appendTo(tr);
+                                $("<td/>").html(obj.publishDate).appendTo(tr);
+                                $("<td/>").html(obj.cover).appendTo(tr);
+                                $("<td/>").html(obj.details).appendTo(tr);
+                                $("<td/>").html(jsdata.data[index].categories.cname).appendTo(tr);
+                                //修改
+                                var aEdit=$("<a class='aEdit'>修改</a>").data("obj",obj).data("cid",jsdata.data[index].categories.cid);
+                                var aDel=$("<a class='aDel'>删除</a>").data("isbn",obj.isbn);
+
+                                $("<td/>").append(aEdit).append("  |  ").append(aDel).appendTo(tr);
+
+                                $("#tbody").append(tr);
+                            })
+                        }
+                })
+                
+             },
+            //删除
+            delete:function(){
+                //this-->.aDel
+                console.log($(this).data("isbn"));
+                var isbn=$(this).data("isbn");
+
+                $.ajax({
+                    url:"doServlet?action=delete",
+                    data:{isbn:isbn},
+                    beforeSend:function () {
+                        if(!confirm("是否确定删除?")){
+                            //不删除
+                            return false;
+                        }
+                    },
+                    success:function (num) {
+                        console.log(num);
+                        //刷新数据
+                        app.bindata();
+                    }
+                })
+
+            },
+
+            //批量删除
+            deleteAll:function(){
+                var arr=new Array();
+              $(".check").each(function (index,obj) {
+                 if($(this).prop("checked")){
+                     arr.push($(this).data("isbn"));
+                 }
+              });
+
+                for (var i=0;i<arr.length;i++){
+                    console.log(arr[i])
+                }
+                $.ajax({
+                    url:"doServlet?action=deleteAll",
+                    data:{items:arr.toString()},
+                    beforeSend:function(){
+                      if(!confirm("是否确定批量删除?!!")) {
+                          return false;
+                      }
+                    },
+                    success:function (num) {
+                        console.log("批量删除"+num);
+                        //刷新数据
+                        app.bindata();
+                    }
+                })
+            },
+
+            //新增数据
+            insert:function(){
+
+                $.ajax({
+                    url:"doServlet?action=insert",
+                    data:{title:$("#title").val(),author:$("#author").val(),price:$("#price").val(),
+                        publishDate:$("#publishDate").val(),cover:$("#cover").val(),
+                        details:editor.txt.html(),cid:$("#categoriescname").val()},
+                    beforeSend:function(){
+                        if($("#title").val()==""||$("#author").val()==""||$("#price").val()==""||$("#publishDate").val()==""){
+                            alert("信息未填写完整!");
+                            return false;
+                        }
+                    },
+                    success:function (num) {
+                        console.log("添加成功"+num);
+                        $("#title").val(""),$("#author").val(""),$("#price").val(""),editor.txt.html("");
+                        //刷新数据
+                        app.bindata();
+                    }
+                })
+            },
+
+            //获得数据
+            getDate:function(){
+                //原理：先赋值就，然后在修改
+                //赋值
+                var obj=$(this).data("obj");
+                $("#isbn").val(obj.isbn);
+                $("#title").val(obj.title);
+                $("#author").val(obj.author);
+                $("#price").val(obj.price);
+                $("#publishDate").val(obj.publishDate);
+                $("#categoriescname").val($(this).data(("cid")));
+                editor.txt.html(obj.details);
+            },
+
+            //修改数据
+            update:function(){
+                //gno,gname,gprice,gdate,gstate
+                $.ajax({
+                    url:"doServlet?action=update",
+                    data:{isbn:$("#isbn").val(),title:$("#title").val(),author:$("#author").val(),price:$("#price").val(),cover:"",
+                        publishDate:$("#publishDate").val(),cid:$("#categoriescname").val(),details:editor.txt.html()},
+                    success:function (num) {
+                        console.log("修改成功"+num);
+                        $("#title").val(""),$("#author").val(""),$("#price").val(""),editor.txt.html("");
+                        //刷新数据
+                        app.bindata();
+                    }
+                })
+            },
+
+            //初始化
+            init(){
+                app.bindata();
+                //监听点击事件
+               //委托对象
+               $("#tbody").on("click",".aDel",app.delete);
+                //委托添加
+                 $("#btnadd").click(app.insert);
+                     //监听修改点击
+                    $("#tbody").on("click",".aEdit",app.getDate);
+                  //委托修改
+                 $("#btnupdate").click(app.update);
+                  $("#btndelall").click(app.deleteAll);
+                  $("#mohubtn").click(app.mohuSelect);
+            }
+        };
+
+        //只和书籍暴露一个接口，他只知道我有一个Init 方法，而不知道我里面还有什么方法。，
+        //提高了数据的安全性，和代码可读
+        app.init();
+
+    })
+
+</script>
+</html>
